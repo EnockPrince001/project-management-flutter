@@ -11,6 +11,19 @@ const String getProjectsQuery = r'''
   }
 ''';
 
+// NEW: Query to get projects for a specific user
+const String getProjectsByUserIdQuery = r'''
+  query GetProjectsByUserId($userId: Int!) {
+    projectsByUserId(userId: $userId) {
+      projectID
+      projectName
+      description
+      startDate
+      endDate
+    }
+  }
+''';
+
 const String getUsersQuery = r'''
   query GetUsers {
     users {
@@ -58,3 +71,23 @@ const String createTaskMutation = r'''
     createTask(input: $input)
   }
 ''';
+
+const String getTasksQuery = r'''
+  query GetTasks {
+    tasks { taskID, status }
+  }
+''';
+
+const String getDashboardStatsQuery = r'''
+  query GetDashboardStats {
+    projects { projectID }
+    tasks { status }
+    users { userID }
+  }
+''';
+
+const String deleteTaskMutation = r'''
+  mutation DeleteTask($id: Int!) { deleteTask(id: $id) }
+''';
+// NEW: Query for the stats dashboard
+

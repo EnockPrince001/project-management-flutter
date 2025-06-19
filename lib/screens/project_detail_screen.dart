@@ -1,8 +1,9 @@
-// lib/screens/project_detail_screen.dart
+// File: lib/screens/project_detail_screen.dart
 import 'package:flutter/material.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
-import 'package:project_management_app/api/graphql_queries.dart'; // Correct import for queries
-import 'package:project_management_app/screens/create_task_screen.dart'; // Correct import for CreateTaskScreen
+import 'package:project_management_app/api/graphql_queries.dart';
+import 'package:project_management_app/screens/create_task_screen.dart';
+import 'package:project_management_app/screens/task_detail_screen.dart'; // Ensure this is correctly imported
 
 // Extension to format DateTime for display
 extension DateOnlyCompare on DateTime {
@@ -12,8 +13,7 @@ extension DateOnlyCompare on DateTime {
 }
 
 class ProjectDetailScreen extends StatefulWidget {
-  final Map<String, dynamic>
-      project; // The selected project object passed from ProjectListPage
+  final Map<String, dynamic> project; // The selected project object
 
   const ProjectDetailScreen({super.key, required this.project});
 
@@ -36,7 +36,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // --- Project Details Section ---
+          // --- Project Details Section (Enhanced Card) ---
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Card(
@@ -106,8 +106,10 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                           'Created By:',
                           style: theme.textTheme.bodyLarge,
                         ),
+                        // Note: For 'createdBy', you might want to fetch and display the user's name
+                        // Currently displays User ID.
                         Text(
-                          'User ID: ${widget.project['createdBy']}', // Will fetch full user info later
+                          'User ID: ${widget.project['createdBy']}',
                           style: theme.textTheme.bodyLarge
                               ?.copyWith(fontWeight: FontWeight.bold),
                         ),
@@ -118,7 +120,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
               ),
             ),
           ),
-          // --- Tasks Section ---
+          // --- Tasks Section Header ---
           Padding(
             padding:
                 const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
@@ -129,18 +131,16 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
               ),
             ),
           ),
+          // --- Tasks List (using Query and ListView.builder) ---
           Expanded(
             child: Query(
               options: QueryOptions(
-                document: gql(
-                    getTasksByProjectIdQuery), // Correctly use the query string
-                variables: {
-                  'projectId': projectId,
-                },
+                document: gql(getTasksByProjectIdQuery),
+                variables: {'projectId': projectId},
                 fetchPolicy: FetchPolicy.cacheAndNetwork,
               ),
-              builder: (QueryResult result,
-                  {VoidCallback? refetch, FetchMore? fetchMore}) {
+              builder: (QueryResult result, {refetch, fetchMore}) {
+                // Capture the refetch callback after the frame is built
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   if (mounted) {
                     _tasksRefetch = refetch; // Capture the refetch callback
@@ -178,9 +178,9 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                       ),
                       child: ListTile(
                         leading: Icon(
-                          Icons.task_alt,
+                          Icons.task_alt, // Changed to a more general task icon
                           color: task['status'] == 'Done'
-                              ? Colors.green
+                              ? Colors.green // Use 'Done' as per task status
                               : theme.colorScheme.secondary,
                         ),
                         title: Text(
@@ -190,8 +190,8 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Status: ${task['status']}'),
-                            Text('Priority: ${task['priority']}'),
+                            Text('Status: ${task['status'] ?? 'N/A'}'),
+                            Text('Priority: ${task['priority'] ?? 'N/A'}'),
                             if (task['dueDate'] != null)
                               Text(
                                   'Due: ${DateTime.parse(task['dueDate']).toLocal().toShortDateString()}'),
@@ -202,7 +202,13 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                         trailing: Icon(Icons.arrow_forward_ios,
                             size: 14, color: theme.iconTheme.color),
                         onTap: () {
-                          // Implement navigation to task details if needed
+                          // Navigate to task details screen
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    TaskDetailScreen(task: task),
+                              ));
                         },
                       ),
                     );
@@ -219,13 +225,11 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
           final bool? taskCreated = await Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => CreateTaskScreen(
-                  projectId:
-                      projectId), // Correct way to navigate to CreateTaskScreen
+              builder: (context) => CreateTaskScreen(projectId: projectId),
             ),
           );
 
-          if (!mounted) return; // Add mounted check here!
+          if (!mounted) return; // Add mounted check for async operations
 
           if (taskCreated == true) {
             _tasksRefetch?.call(); // Refetch tasks when a new one is created

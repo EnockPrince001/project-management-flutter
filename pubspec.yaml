@@ -14,6 +14,8 @@ dependencies:
   cupertino_icons: ^1.0.8
   # Add the graphql_flutter package here
   graphql_flutter: ^5.0.0 # Use the latest stable version
+  provider: ^6.0.0
+  pie_chart: ^5.4.0
 
 dev_dependencies:
   flutter_test:

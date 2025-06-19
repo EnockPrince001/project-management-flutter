@@ -1,17 +1,21 @@
-// File: lib/main.dart (REPLACE)
-// This file now uses initialRoute and routes to define navigation.
 import 'package:flutter/material.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:project_management_app/api/graphql_client.dart';
-import 'package:project_management_app/screens/main_tabs_screen.dart'; // Import main tabs screen
+import 'package:project_management_app/screens/auth_wrapper.dart';
+import 'package:project_management_app/screens/create_project_screen.dart';
 import 'package:project_management_app/theme/app_theme.dart';
-import 'package:project_management_app/screens/create_project_screen.dart'; // Import CreateProjectScreen
+import 'package:project_management_app/providers/auth_provider.dart';
+import 'package:provider/provider.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
   await initHiveForFlutter();
   final client = getGraphQLClient();
-  runApp(ProjectManagementApp(client: client));
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => AuthProvider(),
+      child: ProjectManagementApp(client: client),
+    ),
+  );
 }
 
 class ProjectManagementApp extends StatelessWidget {
@@ -26,13 +30,9 @@ class ProjectManagementApp extends StatelessWidget {
         title: 'Project Manager',
         theme: AppTheme.darkTheme,
         debugShowCheckedModeBanner: false,
-        // FIX: Use initialRoute and routes instead of home to enable named routes
-        initialRoute: '/',
+        home: const AuthWrapper(),
         routes: {
-          '/': (context) =>
-              const MainTabsScreen(), // Main tabs screen is the root
-          '/create-project': (context) =>
-              const CreateProjectScreen(), // This route is now properly defined
+          '/create-project': (context) => const CreateProjectScreen(),
         },
       ),
     );
